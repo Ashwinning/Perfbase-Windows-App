@@ -42,32 +42,71 @@ namespace Perfbase_Windows_App
 
         void test()
         {
-            // Get all processes running on the local computer.
-            List<PerfProcess> processes = new List<PerfProcess>();
-            Process[] localAll = Process.GetProcesses();
+            
+            List<PerfProcess> processes = new List<PerfProcess>(); //Create a list to store our process info
+            List<Process> localAll = Process.GetProcesses().ToList<Process>(); // Get all processes running on the local computer.
+            
+            //remove idle
+            localAll.Remove(localAll.Single(s => s.ProcessName == "Idle"));
+
+            //Create performance counters and counter samples for each process and save them in a list
+            List<PCCS> pccs = new List<PCCS>();
             foreach (Process process in localAll)
             {
-                PerformanceCounter theCPUCounter = new PerformanceCounter("Process", "% Processor Time", process.ProcessName);
-                //PerformanceCounter theMemCounter = new PerformanceCounter("Process", "Working Set", process.ProcessName);
+                PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", process.ProcessName);
+                CounterSample cs1 = cpuCounter.NextSample();
 
+                pccs.Add(new PCCS(cpuCounter, cs1));
+            }
+
+            //Sleep for a bit so we can get the process cpu consumption values
+            System.Threading.Thread.Sleep(100);
+
+            //Save all processes to list
+            int i = 0; //track which process we're on
+            foreach (Process process in localAll)
+            {
+                CounterSample cs2 = pccs[i].performanceCounter.NextSample();
+                //Add values to processes list.
                 PerfProcess newProcess = new PerfProcess();
                 newProcess.name = process.ProcessName;
-                //newProcess.cpuUsage = theCPUCounter.NextValue();
-                newProcess.memUsage = PerfProcessMemoryUsage(process);
+                newProcess.cpuUsage = CounterSample.Calculate(pccs[i].counterSample, cs2); //the final CPU counter
+                newProcess.memUsage = ProcessMemoryUsage(process);
                 processes.Add(newProcess);
+
+                //increment index
+                i++;
             }
+
+            //Sort by name
             processes.Sort((a, b) => a.name.CompareTo(b.name));
 
+            //display
+            float total = 0;
             foreach (PerfProcess proc in processes)
             {
                 Console.WriteLine(proc.name + " | " + proc.cpuUsage + " | " + proc.memUsage);
+                total += proc.cpuUsage;
             }
+            Console.WriteLine(total);
         }
 
-        private float PerfProcessMemoryUsage(Process process)
+        private float ProcessMemoryUsage(Process process)
         {
             var counter = new PerformanceCounter("Process", "Working Set - Private", process.ProcessName);
             return counter.NextValue() / 1024 / 1024;
+        }
+
+        class PCCS
+        {
+            public PerformanceCounter performanceCounter;
+            public CounterSample counterSample;
+
+            public PCCS(PerformanceCounter pc, CounterSample cs)
+            {
+                performanceCounter = pc;
+                counterSample = cs;
+            }
         }
 
     }
