@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Perfbase;
 
+using System.Runtime.Serialization.Formatters.Binary; //For serializing to bytes.
+using System.IO;
+
 namespace Perfbase_Windows_App
 {
     public partial class Form1 : Form
@@ -21,7 +24,19 @@ namespace Perfbase_Windows_App
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            /*
+
+            GetReport();
+            
+
+            //test();
+
+        }
+
+
+
+        void GetReport()
+        {
+            Console.WriteLine("Getting Report");
             OpenHardwareMonitor.Hardware.Computer computer = new OpenHardwareMonitor.Hardware.Computer();
             computer.Open();
             computer.CPUEnabled = true;
@@ -34,9 +49,6 @@ namespace Perfbase_Windows_App
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(stats);
             Console.WriteLine(" --- ");
             Console.Write(json);
-            */
-
-            //test();
 
         }
 
