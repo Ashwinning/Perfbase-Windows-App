@@ -36,10 +36,15 @@ namespace Perfbase_Windows_App
             Console.Write(json);
             */
 
-            test();
+            //test();
 
         }
 
+        /// <summary>
+        /// Some test stuff I was working with 4 months ago.
+        /// Leaving this here for now, method is not called anymore.
+        /// 
+        /// </summary>
         void test()
         {
             
